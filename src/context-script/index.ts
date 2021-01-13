@@ -98,13 +98,14 @@ async function download(type?: IconFontHelper.imgType, size?: number): Promise<v
     if (!iconList || iconList.length < 1) return;
     // 创建zip数据
     let zipFile = new JSZip();
+    let iconNameList = []
 
     for (let index = 0; index < iconList.length; index++) {
         // 获取SVG的信息与名称
         // 获取SVG路径，去除掉无用的信息
         let {data, name} = getSVGFromNode(iconList[index]);
         // 获取图标的名词
-        name = name + ' ' + index;
+        // name = name + ' ' + index;
         if (type === 'svg' || !type) {
             name += '.svg';
             zipFile.file(name, data);
@@ -114,14 +115,17 @@ async function download(type?: IconFontHelper.imgType, size?: number): Promise<v
             pngFile = pngFile.replace(/^data:image\/\w+;base64,/, '');
             zipFile.file(name, pngFile, {base64: true});
         }
+        iconNameList.push(name)
     }
+    zipFile.file('iconNameList.txt', JSON.stringify(iconNameList))
     zipFile.generateAsync({type: "blob"}).then(function (content: BlobPart) {
         const url = window.URL.createObjectURL(new Blob([content], {"type": "application\/zip"}));
         // 创建一个下载标签
+        const zipFileName = document.querySelector('.manage-right-top>span').getAttribute('title')
         const a = document.createElement("a");
         document.body.appendChild(a);
         a.setAttribute("class", "svg-crowbar");
-        a.setAttribute("download", "大王饶命.zip");
+        a.setAttribute("download", zipFileName ?`${zipFileName}.zip` : "大王饶命.zip");
         a.setAttribute("href", url);
         a.style["display"] = "none";
         a.click();
